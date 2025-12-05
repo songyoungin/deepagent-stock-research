@@ -1,0 +1,29 @@
+repos:
+  # 1. 기본 파일 검사 (공백 제거, 대용량 파일 체크 등)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace   # 줄 끝의 불필요한 공백 제거
+      - id: end-of-file-fixer     # 파일 끝에 빈 줄 추가
+      - id: check-yaml            # yaml 파일 문법 오류 체크
+      - id: check-added-large-files # Git에 너무 큰 파일이 올라가는지 체크
+
+  # 2. Ruff (Linting & Formatting)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.8  # 최신 버전 확인 후 수정 가능
+    hooks:
+      # ruff-format: Black을 대체하는 포매터 (코드 스타일 자동 정리)
+      - id: ruff-format
+
+      # ruff: Linter (버그, 미사용 import 등 감지)
+      - id: ruff
+        args: [ --fix ]  # 자동으로 고칠 수 있는 건 고치도록 설정 (예: 미사용 import 제거)
+
+  # 3. Mypy (Static Type Checking)
+  # 타입 힌트 오류를 잡아냅니다.
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.0
+    hooks:
+      - id: mypy
+        # Mypy가 실행될 때 필요한 외부 라이브러리 스텁(types-...)이 있다면 여기에 추가해야 합니다.
+        additional_dependencies: []

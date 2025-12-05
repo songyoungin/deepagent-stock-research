@@ -1,0 +1,36 @@
+[project]
+name = "deepagent-stock-research"
+version = "0.1.0"
+description = "An autonomous Deep Agent built with LangGraph for in-depth stock market research, combining real-time financial data analysis with news synthesis and self-corrective reasoning."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "langchain-google-genai>=3.2.0",
+    "langgraph>=1.0.4",
+    "tavily-python>=0.7.14",
+    "yfinance>=0.2.66",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.0",
+]
+
+[tool.ruff]
+# 줄 길이 제한 (Black 기본값과 동일하게 88 또는 120 추천)
+line-length = 120
+target-version = "py313" # 사용하는 파이썬 버전에 맞춰 수정 (3.10, 3.11, 3.12 등)
+
+[tool.ruff.lint]
+# 사용할 규칙들
+# E: pycodestyle errors
+# W: pycodestyle warnings
+# F: Pyflakes (버그 찾기)
+# I: isort (import 정렬)
+select = ["E", "W", "F", "I"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.13" # 사용하는 파이썬 버전
+strict = false          # 타입 검사 엄격도
+ignore_missing_imports = true # 외부 라이브러리(yfinance 등) 타입이 없어도 에러 안 나게 설정
