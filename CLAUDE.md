@@ -116,3 +116,49 @@ src/
 - **새 도구 추가**: `src/tools/`에 새 파일 생성 후 LangChain Tool로 래핑
 - **노드 추가**: `agents/nodes.py`에 함수 추가 후 `agents/graph.py`에서 그래프에 연결
 - **상태 확장**: `agents/state.py`의 TypedDict에 필드 추가
+
+## 구현 진행 상황
+
+### Phase 1: 기반 인프라 (완료)
+
+#### 1. 설정 관리 (`src/config.py`)
+- Pydantic Settings 기반 타입 안전한 설정 관리
+- 환경 변수 자동 로딩 (.env 파일)
+- API 키 관리 (Google Gemini, Tavily)
+- LLM 설정 (모델명, temperature, max_tokens)
+- Deep Agent 설정 (max_iterations)
+
+#### 2. LLM 서비스 (`src/services/llm.py`)
+- `get_llm()`: ChatGoogleGenerativeAI 인스턴스 생성 팩토리 함수
+- 설정 기반 자동 초기화
+
+#### 3. 에이전트 상태 (`src/agents/state.py`)
+- `AgentState` TypedDict 정의
+- Deep Agent 워크플로우 상태 관리
+- Google 스타일 Docstring으로 각 필드 설명 포함
+- 필드: ticker, messages, research_plan, stock_data, news_data, analysis, critique, needs_revision, iteration_count, final_report
+
+#### 4. 데이터 모델 (`src/models/`)
+- **stock.py**:
+  - `StockPrice`: 현재 주가 정보 (symbol, current_price, previous_close, change_percent, volume, market_cap)
+  - `FinancialData`: 재무제표 데이터 (symbol, revenue, net_income, eps, pe_ratio, debt_to_equity)
+- **research.py**:
+  - `NewsItem`: 뉴스 아이템 (title, url, content, published_date, score)
+  - `ResearchReport`: 최종 리서치 보고서 (summary, fundamental_analysis, technical_analysis, sentiment_analysis, recommendation, key_risks, iteration_count, confidence_score)
+
+#### 5. 의존성
+- `pydantic-settings>=2.7.1` 추가
+
+### Phase 2: 도구 구현 (예정)
+- `src/tools/stock_data.py`: yfinance 기반 주식 데이터 조회 도구
+- `src/tools/news_search.py`: Tavily 기반 뉴스 검색 도구
+- `src/tools/analysis.py`: 기술적 분석 도구
+
+### Phase 3: 에이전트 노드 (예정)
+- `src/agents/nodes.py`: plan, collect_data, analyze, critique, should_continue 노드
+
+### Phase 4: 그래프 구성 (예정)
+- `src/agents/graph.py`: StateGraph 구성 및 컴파일
+
+### Phase 5: 통합 및 실행 (예정)
+- `main.py`: 애플리케이션 엔트리포인트
