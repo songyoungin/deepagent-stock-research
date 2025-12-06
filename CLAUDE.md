@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-LangGraph 기반의 자율적인 Deep Agent로, 주식 시장 조사를 수행합니다. 실시간 금융 데이터 분석, 뉴스 종합, 자기 수정 추론을 결합한 시스템입니다.
+[langchain-ai/deepagents](https://github.com/langchain-ai/deepagents) 기반의 자율적인 Deep Agent로, 주식 시장 조사를 수행합니다. 계획 수립, 서브에이전트 위임, 도구 호출을 통해 종합적인 주식 분석을 제공합니다.
 
 ## 핵심 기술 스택
 
 - **Python 3.13** (정확한 버전 요구사항)
-- **LangGraph**: Agent 오케스트레이션 및 워크플로우 관리
-- **LangChain Google GenAI**: LLM 통합
+- **deepagents**: LangChain/LangGraph 기반 에이전트 프레임워크
+- **LangChain Google GenAI**: LLM 통합 (Google Gemini)
 - **yfinance**: 실시간 금융 데이터 수집
 - **Tavily**: 뉴스 및 웹 검색 통합
 
@@ -71,112 +71,111 @@ source .venv/bin/activate && python main.py
 
 ### 프로젝트 구조
 
-프로젝트는 기능별 모듈 구조로 조직되어 있습니다:
-
 ```
 src/
-├── agents/          # LangGraph 에이전트 정의
-│   ├── graph.py     # StateGraph 정의 및 노드/엣지 연결
-│   ├── nodes.py     # 각 노드의 실행 로직
-│   └── state.py     # 에이전트 상태 모델 (TypedDict)
-├── tools/           # 에이전트가 사용하는 도구들
+├── agent.py         # 메인 에이전트 (create_deep_agent)
+├── prompts.py       # 시스템 프롬프트 및 워크플로우 지침
+├── config.py        # 환경 변수 및 설정 관리
+├── subagents/       # 서브에이전트 정의
+│   └── __init__.py  # 3개 서브에이전트 (fundamental, technical, sentiment)
+├── tools/           # 커스텀 도구
 │   ├── stock_data.py   # yfinance 기반 주식 데이터 도구
 │   ├── news_search.py  # Tavily 기반 뉴스 검색 도구
-│   └── analysis.py     # 기술적/펀더멘털 분석 도구
-├── models/          # Pydantic 데이터 모델
-│   ├── stock.py     # 주식 정보, 재무제표 등
-│   └── research.py  # 리서치 결과 데이터 모델
-├── services/        # 서비스 레이어
-│   ├── llm.py       # LLM 설정 및 관리 (Google GenAI)
-│   └── data_provider.py  # 외부 API 통합
-└── config.py        # 환경 변수 및 설정 관리
+│   └── analysis.py     # 기술적 분석 도구
+└── models/          # Pydantic 데이터 모델
+    ├── stock.py     # 주식 정보, 재무제표 등
+    └── research.py  # 뉴스 아이템, 리서치 보고서
 ```
 
-### 아키텍처 설계 원칙
+### DeepAgents 아키텍처
 
-1. **LangGraph Agent 워크플로우**
-   - `agents/graph.py`: StateGraph로 주식 조사 워크플로우 정의
-   - `agents/nodes.py`: 각 단계를 노드 함수로 구현 (계획 → 데이터 수집 → 분석 → 종합 → 자기 수정)
-   - `agents/state.py`: TypedDict로 에이전트 간 전달되는 상태 정의
+이 프로젝트는 `deepagents` 프레임워크를 사용하여 다음 패턴을 구현합니다:
 
-2. **도구 기반 아키텍처**
-   - `tools/` 모듈의 각 도구는 LangChain Tool로 래핑
-   - yfinance, Tavily API를 추상화하여 에이전트에서 쉽게 호출
+1. **계획 수립 (Planning)**
+   - `write_todos`/`read_todos` 도구로 작업 계획 관리
+   - LLM이 동적으로 분석 단계를 계획
 
-3. **타입 안전성**
-   - `models/`의 Pydantic 모델로 데이터 검증
-   - 명시적 타입 힌트 사용 (mypy 호환)
+2. **서브에이전트 위임 (Sub-agent Delegation)**
+   - `task` 도구로 전문 서브에이전트에 작업 위임
+   - 3개의 전문 서브에이전트:
+     - `fundamental-analyst`: 펀더멘털 분석 (재무제표, 밸류에이션)
+     - `technical-analyst`: 기술적 분석 (이동평균, RSI)
+     - `sentiment-analyst`: 뉴스/감성 분석
 
-4. **서비스 레이어 분리**
-   - `services/llm.py`: LLM 초기화 및 관리
-   - `services/data_provider.py`: 외부 데이터 소스 통합 로직
+3. **도구 호출 (Tool Calling)**
+   - LLM이 필요에 따라 도구 선택 및 호출
+   - 커스텀 도구: `get_stock_price`, `get_financial_data`, `get_technical_summary`, `search_stock_news`
+
+4. **파일시스템 (Filesystem)**
+   - `write_file`/`read_file` 도구로 분석 결과 저장
+   - 대용량 컨텍스트 자동 오프로딩
+
+### 워크플로우
+
+```
+사용자 요청
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│           Main Agent                     │
+│  1. write_todos: 분석 계획 수립          │
+│  2. task: 서브에이전트 위임              │
+│     ├── fundamental-analyst             │
+│     ├── technical-analyst               │
+│     └── sentiment-analyst               │
+│  3. 결과 종합 및 보고서 작성             │
+│  4. write_file: 보고서 저장              │
+└─────────────────────────────────────────┘
+```
 
 ### 개발 가이드
 
-- **새 도구 추가**: `src/tools/`에 새 파일 생성 후 LangChain Tool로 래핑
-- **노드 추가**: `agents/nodes.py`에 함수 추가 후 `agents/graph.py`에서 그래프에 연결
-- **상태 확장**: `agents/state.py`의 TypedDict에 필드 추가
+- **새 도구 추가**: `src/tools/`에 함수 생성 후 `src/agent.py`의 `custom_tools`에 추가
+- **서브에이전트 추가**: `src/subagents/__init__.py`에 정의 후 `SUBAGENTS` 리스트에 추가
+- **프롬프트 수정**: `src/prompts.py`에서 워크플로우 지침 수정
 
-## 구현 진행 상황
+## 구현 현황
 
-### Phase 1: 기반 인프라 (완료)
+### 완료된 기능
 
 #### 1. 설정 관리 (`src/config.py`)
 - Pydantic Settings 기반 타입 안전한 설정 관리
 - 환경 변수 자동 로딩 (.env 파일)
 - API 키 관리 (Google Gemini, Tavily)
 - LLM 설정 (모델명, temperature, max_tokens)
-- Deep Agent 설정 (max_iterations)
 
-#### 2. LLM 서비스 (`src/services/llm.py`)
-- `get_llm()`: ChatGoogleGenerativeAI 인스턴스 생성 팩토리 함수
-- 설정 기반 자동 초기화
+#### 2. 커스텀 도구 (`src/tools/`)
+- **stock_data.py**: 주가/재무 데이터 조회 (yfinance)
+- **news_search.py**: 뉴스 검색 (Tavily)
+- **analysis.py**: 기술적 분석 (이동평균, RSI, 매매 시그널)
 
-#### 3. 에이전트 상태 (`src/agents/state.py`)
-- `AgentState` TypedDict 정의
-- Deep Agent 워크플로우 상태 관리
-- Google 스타일 Docstring으로 각 필드 설명 포함
-- 필드: ticker, messages, research_plan, stock_data, news_data, analysis, critique, needs_revision, iteration_count, final_report
+#### 3. 데이터 모델 (`src/models/`)
+- **stock.py**: `StockPrice`, `FinancialData`
+- **research.py**: `NewsItem`, `ResearchReport`
 
-#### 4. 데이터 모델 (`src/models/`)
-- **stock.py**:
-  - `StockPrice`: 현재 주가 정보 (symbol, current_price, previous_close, change_percent, volume, market_cap)
-  - `FinancialData`: 재무제표 데이터 (symbol, revenue, net_income, eps, pe_ratio, debt_to_equity)
-- **research.py**:
-  - `NewsItem`: 뉴스 아이템 (title, url, content, published_date, score)
-  - `ResearchReport`: 최종 리서치 보고서 (summary, fundamental_analysis, technical_analysis, sentiment_analysis, recommendation, key_risks, iteration_count, confidence_score)
+#### 4. 프롬프트 (`src/prompts.py`)
+- 메인 에이전트 워크플로우 지침
+- 서브에이전트별 전문 프롬프트
+- 위임 전략 지침
 
-#### 5. 의존성
-- `pydantic-settings>=2.7.1` 추가
+#### 5. 서브에이전트 (`src/subagents/`)
+- `fundamental-analyst`: 펀더멘털 분석
+- `technical-analyst`: 기술적 분석
+- `sentiment-analyst`: 감성 분석
 
-### Phase 2: 도구 구현 (완료)
+#### 6. 메인 에이전트 (`src/agent.py`)
+- `create_deep_agent()` 기반 에이전트 생성
+- 커스텀 도구 및 서브에이전트 통합
 
-#### 1. 주식 데이터 조회 도구 (`src/tools/stock_data.py`)
-- `get_stock_price()`: 현재가, 전일종가, 등락률, 거래량, 시가총액 조회
-- `get_financial_data()`: 매출액, 순이익, EPS, PER, 부채비율 조회
-- `stock_price_tool`: LangChain Tool로 래핑된 주가 조회 도구
-- `financial_data_tool`: LangChain Tool로 래핑된 재무 데이터 조회 도구
+#### 7. 엔트리포인트 (`main.py`)
+- 대화형 종목 입력
+- 에이전트 실행 및 결과 출력
 
-#### 2. 뉴스 검색 도구 (`src/tools/news_search.py`)
-- `search_stock_news()`: Tavily API를 사용한 주식 관련 뉴스 검색
-- `news_search_tool`: LangChain Tool로 래핑된 뉴스 검색 도구
-- NewsItem 모델로 구조화된 뉴스 데이터 반환
+## 환경 변수
 
-#### 3. 기술적 분석 도구 (`src/tools/analysis.py`)
-- `calculate_moving_averages()`: 20일/50일/200일 이동평균 계산
-- `calculate_rsi()`: 14일 RSI(Relative Strength Index) 계산
-- `get_technical_summary()`: 종합 기술적 분석 및 매매 시그널 제공
-- `technical_analysis_tool`: LangChain Tool로 래핑된 기술적 분석 도구
+`.env` 파일에 다음 변수를 설정해야 합니다:
 
-#### 4. 도구 패키지 (`src/tools/__init__.py`)
-- 모든 도구 함수 및 LangChain Tool을 패키지 레벨에서 export
-- `__all__` 정의로 명시적 public API 관리
-
-### Phase 3: 에이전트 노드 (예정)
-- `src/agents/nodes.py`: plan, collect_data, analyze, critique, should_continue 노드
-
-### Phase 4: 그래프 구성 (예정)
-- `src/agents/graph.py`: StateGraph 구성 및 컴파일
-
-### Phase 5: 통합 및 실행 (예정)
-- `main.py`: 애플리케이션 엔트리포인트
+```
+GOOGLE_API_KEY=your_google_api_key
+TAVILY_API_KEY=your_tavily_api_key
+```

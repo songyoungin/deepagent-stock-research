@@ -6,7 +6,12 @@
       "Bash(uv sync:*)",
       "Bash(git add:*)",
       "Bash(source:*)",
-      "Bash(pre-commit run:*)"
+      "Bash(pre-commit run:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:docs.langchain.com)",
+      "Bash(python -c:*)"
     ],
     "deny": [],
     "ask": []
