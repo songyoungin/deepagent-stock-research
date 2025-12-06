@@ -149,10 +149,28 @@ src/
 #### 5. 의존성
 - `pydantic-settings>=2.7.1` 추가
 
-### Phase 2: 도구 구현 (예정)
-- `src/tools/stock_data.py`: yfinance 기반 주식 데이터 조회 도구
-- `src/tools/news_search.py`: Tavily 기반 뉴스 검색 도구
-- `src/tools/analysis.py`: 기술적 분석 도구
+### Phase 2: 도구 구현 (완료)
+
+#### 1. 주식 데이터 조회 도구 (`src/tools/stock_data.py`)
+- `get_stock_price()`: 현재가, 전일종가, 등락률, 거래량, 시가총액 조회
+- `get_financial_data()`: 매출액, 순이익, EPS, PER, 부채비율 조회
+- `stock_price_tool`: LangChain Tool로 래핑된 주가 조회 도구
+- `financial_data_tool`: LangChain Tool로 래핑된 재무 데이터 조회 도구
+
+#### 2. 뉴스 검색 도구 (`src/tools/news_search.py`)
+- `search_stock_news()`: Tavily API를 사용한 주식 관련 뉴스 검색
+- `news_search_tool`: LangChain Tool로 래핑된 뉴스 검색 도구
+- NewsItem 모델로 구조화된 뉴스 데이터 반환
+
+#### 3. 기술적 분석 도구 (`src/tools/analysis.py`)
+- `calculate_moving_averages()`: 20일/50일/200일 이동평균 계산
+- `calculate_rsi()`: 14일 RSI(Relative Strength Index) 계산
+- `get_technical_summary()`: 종합 기술적 분석 및 매매 시그널 제공
+- `technical_analysis_tool`: LangChain Tool로 래핑된 기술적 분석 도구
+
+#### 4. 도구 패키지 (`src/tools/__init__.py`)
+- 모든 도구 함수 및 LangChain Tool을 패키지 레벨에서 export
+- `__all__` 정의로 명시적 public API 관리
 
 ### Phase 3: 에이전트 노드 (예정)
 - `src/agents/nodes.py`: plan, collect_data, analyze, critique, should_continue 노드

@@ -1,6 +1,6 @@
 """LangGraph 에이전트의 상태 모델을 정의하는 모듈입니다."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
@@ -28,8 +28,8 @@ class AgentState(TypedDict):
     ticker: str
     messages: Annotated[list[BaseMessage], add_messages]
     research_plan: str
-    stock_data: dict
-    news_data: list[dict]
+    stock_data: dict[str, Any]
+    news_data: list[dict[str, Any]]
     analysis: str
     critique: str
     needs_revision: bool
