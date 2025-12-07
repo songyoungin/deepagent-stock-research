@@ -1,5 +1,7 @@
 """애플리케이션 설정 및 환경 변수를 관리하는 모듈입니다."""
 
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,14 +12,23 @@ class Settings(BaseSettings):
     환경 변수나 .env 파일에서 자동으로 값을 로드합니다.
     """
 
-    # API Keys
-    google_api_key: str = Field(description="Google API 키")
-    tavily_api_key: str = Field(description="Tavily API 키")
+    # LLM Provider 선택
+    llm_provider: Literal["gemini", "openai"] = Field(default="gemini", description="LLM 제공자 (gemini 또는 openai)")
 
-    # LLM 설정
+    # Google API
+    google_api_key: str | None = Field(default=None, description="Google API 키")
     gemini_model: str = Field(default="gemini-2.0-flash-exp", description="Google Gemini 모델 이름")
-    temperature: float = Field(default=0.7, description="온도 값")
+
+    # OpenAI API
+    openai_api_key: str | None = Field(default=None, description="OpenAI API 키")
+    openai_model: str = Field(default="gpt-4o", description="OpenAI 모델 이름")
+
+    # 공통 LLM 설정
+    temperature: float = Field(default=0.7, description="LLM 온도 값")
     max_tokens: int = Field(default=8000, description="최대 토큰 수")
+
+    # Tavily API
+    tavily_api_key: str = Field(description="Tavily API 키")
 
     # Deep Agent 최대 반복 횟수 설정
     max_iterations: int = Field(default=3, description="최대 반복 횟수")

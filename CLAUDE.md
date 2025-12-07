@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Python 3.13** (정확한 버전 요구사항)
 - **deepagents**: LangChain/LangGraph 기반 에이전트 프레임워크
 - **LangChain Google GenAI**: LLM 통합 (Google Gemini)
+- **LangChain OpenAI**: LLM 통합 (OpenAI GPT)
 - **yfinance**: 실시간 금융 데이터 수집
 - **Tavily**: 뉴스 및 웹 검색 통합
 
@@ -141,7 +142,8 @@ src/
 #### 1. 설정 관리 (`src/config.py`)
 - Pydantic Settings 기반 타입 안전한 설정 관리
 - 환경 변수 자동 로딩 (.env 파일)
-- API 키 관리 (Google Gemini, Tavily)
+- API 키 관리 (Google Gemini, OpenAI, Tavily)
+- LLM Provider 선택 (`LLM_PROVIDER`: gemini 또는 openai)
 - LLM 설정 (모델명, temperature, max_tokens)
 
 #### 2. 커스텀 도구 (`src/tools/`)
@@ -175,7 +177,20 @@ src/
 
 `.env` 파일에 다음 변수를 설정해야 합니다:
 
-```
+```bash
+# LLM Provider 선택 (gemini 또는 openai, 기본값: gemini)
+LLM_PROVIDER=gemini
+
+# Google Gemini (LLM_PROVIDER=gemini인 경우 필수)
 GOOGLE_API_KEY=your_google_api_key
+GEMINI_MODEL=gemini-2.0-flash-exp  # 선택사항
+
+# OpenAI (LLM_PROVIDER=openai인 경우 필수)
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o  # 선택사항
+
+# 공통 설정
 TAVILY_API_KEY=your_tavily_api_key
+TEMPERATURE=0.7  # 선택사항
+MAX_TOKENS=8000  # 선택사항
 ```
